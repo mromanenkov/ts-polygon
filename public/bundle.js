@@ -127,7 +127,6 @@ var setting = {
     padding: 30,
     polygonMargin: 20,
 };
-console.log(poly1);
 var cursor = new __WEBPACK_IMPORTED_MODULE_2__cursor__["a" /* default */]();
 var canvas = new __WEBPACK_IMPORTED_MODULE_1__canvas__["a" /* default */]('example', setting);
 window.addEventListener('load', canvas.init());
@@ -329,20 +328,18 @@ var Utils = /** @class */ (function () {
         return inside;
     };
     Utils.getIntersection = function (segmentA, segmentB) {
-        var vectorA = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentA[0], segmentA[1]);
-        var vectorB = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentB[0], segmentB[1]);
-        var x = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) *
-            (vectorB.x1 - vectorB.x2) - (vectorA.x1 - vectorA.x2) *
-            (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
-            ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) -
-                (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
-        var y = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) *
-            (vectorB.y1 - vectorB.y2) - (vectorA.y1 - vectorA.y2) *
-            (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
-            ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) -
-                (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
-        var isInside = this.isPointInPoly([x, y], [[vectorA.x1, vectorA.y1],
-            [vectorB.x1, vectorB.y1], [vectorA.x2, vectorA.y2], [vectorB.x2, vectorB.y2]]);
+        var v1 = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentA[0]);
+        var v2 = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentA[1]);
+        var v3 = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentB[0]);
+        var v4 = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentB[1]);
+        var x = ((v1.x * v2.y - v1.y * v2.x) *
+            (v3.x - v4.x) - (v1.x - v2.x) * (v3.x * v4.y - v3.y * v4.x)) /
+            ((v1.x - v2.x) * (v3.y - v4.y) - (v1.y - v2.y) * (v3.x - v4.x));
+        var y = ((v1.x * v2.y - v1.y * v2.x) *
+            (v3.y - v4.y) - (v1.y - v2.y) * (v3.x * v4.y - v3.y * v4.x)) /
+            ((v1.x - v2.x) * (v3.y - v4.y) - (v1.y - v2.y) * (v3.x - v4.x));
+        var isInside = this.isPointInPoly([x, y], [[v1.x, v1.y],
+            [v3.x, v3.y], [v2.x, v2.y], [v4.x, v4.y]]);
         return isInside;
     };
     return Utils;
@@ -355,12 +352,26 @@ var Utils = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/*
+export default class Vector implements IVector {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+
+  constructor(pointA: number[], pointB: number[]) {
+    this.x1 = pointA[0];
+    this.y1 = pointA[1];
+  
+    this.x2 = pointB[0];
+    this.y2 = pointB[1];
+  }
+}
+*/
 var Vector = /** @class */ (function () {
-    function Vector(pointA, pointB) {
-        this.x1 = pointA[0];
-        this.y1 = pointA[1];
-        this.x2 = pointB[0];
-        this.y2 = pointB[1];
+    function Vector(point) {
+        this.x = point[0];
+        this.y = point[1];
     }
     return Vector;
 }());

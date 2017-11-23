@@ -1,4 +1,5 @@
 import Vector from './vector';
+import IVector from './interfaces/vector.interface';
 
 export default class Utils {
   public static isPointInPoly(point: number[], polyPoints: number[][]): boolean {
@@ -20,22 +21,22 @@ export default class Utils {
   }
 
   public static getIntersection(segmentA: number[][], segmentB: number[][]) {
-    const vectorA = new Vector(segmentA[0], segmentA[1]);
-    const vectorB = new Vector(segmentB[0], segmentB[1]);
 
-    const x = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) *
-              (vectorB.x1 - vectorB.x2) - (vectorA.x1 - vectorA.x2) *
-              (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
-              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) -
-              (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
-    const y = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) *
-              (vectorB.y1 - vectorB.y2) - (vectorA.y1 - vectorA.y2) *
-              (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
-              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) -
-              (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
+    const v1: IVector = new Vector(segmentA[0]);
+    const v2: IVector = new Vector(segmentA[1]);
+    const v3: IVector = new Vector(segmentB[0]);
+    const v4: IVector = new Vector(segmentB[1]);
 
-    const isInside = this.isPointInPoly([x, y], [[vectorA.x1, vectorA.y1],
-      [vectorB.x1, vectorB.y1], [vectorA.x2, vectorA.y2], [vectorB.x2, vectorB.y2]]);
+    const x: number = ((v1.x * v2.y - v1.y * v2.x) * 
+                      (v3.x - v4.x) - (v1.x - v2.x) * (v3.x * v4.y - v3.y * v4.x)) /
+                      ((v1.x - v2.x) * (v3.y - v4.y) - (v1.y - v2.y) * (v3.x - v4.x));
+
+    const y: number = ((v1.x * v2.y - v1.y * v2.x) *
+                      (v3.y - v4.y) - (v1.y - v2.y) * (v3.x * v4.y - v3.y * v4.x)) /
+                      ((v1.x - v2.x) * (v3.y - v4.y) - (v1.y - v2.y) * (v3.x - v4.x));
+
+    const isInside: boolean = this.isPointInPoly([x, y], [[v1.x, v1.y],
+      [v3.x, v3.y], [v2.x, v2.y], [v4.x, v4.y]]);
 
     return isInside;
   }

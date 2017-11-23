@@ -24,18 +24,13 @@ const setting: ISetting = {
   polygonMargin: 20,
 };
 
-console.log(poly1);
-
 const cursor: ICursor = new Cursor();
 const canvas: ICanvas = new Canvas('example', setting);
 
-
 window.addEventListener('load', canvas.init());
-
 
 const polygons = [poly1, poly2, poly3];
 canvas.addArr(polygons);
-
 
 canvas.element.addEventListener('mousedown', (e: MouseEvent) => {
   cursor.cursorDownPos = [e.offsetX, e.offsetY];
