@@ -1,5 +1,4 @@
 import Vector from './vector';
-import IVector from './interfaces/vector.interface';
 
 export default class Utils {
   public static isPointInPoly(point: number[], polyPoints: number[][]): boolean {
@@ -22,10 +21,10 @@ export default class Utils {
 
   public static getIntersection(segmentA: number[][], segmentB: number[][]) {
 
-    const v1: IVector = new Vector(segmentA[0]);
-    const v2: IVector = new Vector(segmentA[1]);
-    const v3: IVector = new Vector(segmentB[0]);
-    const v4: IVector = new Vector(segmentB[1]);
+    const v1 = new Vector(segmentA[0]);
+    const v2 = new Vector(segmentA[1]);
+    const v3 = new Vector(segmentB[0]);
+    const v4 = new Vector(segmentB[1]);
 
     const x: number = ((v1.x * v2.y - v1.y * v2.x) * 
                       (v3.x - v4.x) - (v1.x - v2.x) * (v3.x * v4.y - v3.y * v4.x)) /

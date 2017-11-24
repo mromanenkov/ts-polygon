@@ -1,6 +1,4 @@
-import IPolygon from './interfaces/polygon.interface';
-
-export default class Polygon implements IPolygon{
+export default class Polygon {
   public points: number[][];
   public strokeColor: string;
   public fillColor: string;

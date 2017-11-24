@@ -1,9 +1,8 @@
 import utils from './utils';
-import ICursor from './interfaces/cursor.interface';
 
-export default class Cursor implements ICursor{
+export default class Cursor {
 
-  private static instance: ICursor;
+  private static instance: Cursor;
 
   public cursorDownPos: number[] = [0, 0];
   public cursorUpPos: number[] = [0, 0];
