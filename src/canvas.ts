@@ -1,20 +1,18 @@
 import utils from './utils';
 import Polygon from './polygon';
 
-import IPolygon from './interfaces/polygon.interface';
-import ICanvas from './interfaces/canvas.interface';
 import ISetting from './interfaces/canvas-setting.interface';
 
-export default class Canvas implements ICanvas{
+export default class Canvas {
   id: string;
   setting: ISetting;
-  objects: IPolygon[];
-  selectedObject: IPolygon;
+  objects: Polygon[];
+  selectedObject: Polygon;
   element: any;
   ctx: CanvasRenderingContext2D;
   nextObjListPos: number[];
 
-  constructor(id: string, setting: ISetting, objects?: IPolygon[]) {
+  constructor(id: string, setting: ISetting, objects?: Polygon[]) {
     this.id = id;
     this.setting = setting;
     this.objects = objects || [];
@@ -29,7 +27,7 @@ export default class Canvas implements ICanvas{
     this.element.height = this.setting.height;
   }
 
-  public add(object: IPolygon): void {
+  public add(object: Polygon): void {
     this.objects.push(object);
     object.setBoundingBox();
 
@@ -43,13 +41,13 @@ export default class Canvas implements ICanvas{
     this.update();
   }
 
-  public addArr(objectArr: IPolygon[]): void {
+  public addArr(objectArr: Polygon[]): void {
     objectArr.forEach((object) => {
       this.add(object);
     });
   }
 
-  public draw(object: IPolygon, isFill?: boolean): void {
+  public draw(object: Polygon, isFill?: boolean): void {
     this.ctx.fillStyle = object.fillColor;
     this.ctx.strokeStyle = object.strokeColor;
 
@@ -77,8 +75,8 @@ export default class Canvas implements ICanvas{
     });
   }
 
-  public getSelectedObject(cursorPos: number[]): IPolygon {
-    let selectedObject: IPolygon;
+  public getSelectedObject(cursorPos: number[]): Polygon {
+    let selectedObject: Polygon;
     this.objects.forEach((object) => {
       const isInside = utils.isPointInPoly(cursorPos, object.points);
       if (isInside) selectedObject = object;
@@ -87,7 +85,7 @@ export default class Canvas implements ICanvas{
   }
 
 
-  private checkVertexInPoly(polyA: IPolygon, polyB: IPolygon): boolean {
+  private checkVertexInPoly(polyA: Polygon, polyB: Polygon): boolean {
     let isInPoly = false;
 
     polyA.points.forEach((point) => {
@@ -110,11 +108,11 @@ export default class Canvas implements ICanvas{
 
   private checkVertexInPolyAll(): void {
     for (let i = 0; i < this.objects.length; i++) {
-      const objectA: IPolygon = this.objects[i];
+      const objectA: Polygon = this.objects[i];
 
       for (let j = 0; j < this.objects.length; j++) {
         if (i === j) continue;
-        const objectB: IPolygon = this.objects[j];
+        const objectB: Polygon = this.objects[j];
         const isInPoly: boolean = this.checkVertexInPoly(objectA, objectB);
 
         if (isInPoly) {
@@ -125,12 +123,12 @@ export default class Canvas implements ICanvas{
     }
   }
 
-  private checkSideIntersection(polyA: IPolygon, polyB: IPolygon): boolean {
+  private checkSideIntersection(polyA: Polygon, polyB: Polygon): boolean {
     const pointsAcopy: number[][] = JSON.parse(JSON.stringify(polyA.points));
     const pointsBcopy: number[][] = JSON.parse(JSON.stringify(polyB.points));
 
-    const polyAcopy: IPolygon = new Polygon(pointsAcopy);
-    const polyBcopy: IPolygon = new Polygon(pointsBcopy);
+    const polyAcopy: Polygon = new Polygon(pointsAcopy);
+    const polyBcopy: Polygon = new Polygon(pointsBcopy);
 
     polyAcopy.points.push(polyAcopy.points[0]);
     polyBcopy.points.push(polyBcopy.points[0]);
@@ -149,7 +147,7 @@ export default class Canvas implements ICanvas{
     return isIntersect;
   }
 
-  private findOverlappedObject(polyA: IPolygon, polyB: IPolygon): boolean {
+  private findOverlappedObject(polyA: Polygon, polyB: Polygon): boolean {
     let isOverlap: boolean = false;
     if (this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB)) {
       isOverlap = true;
@@ -161,10 +159,10 @@ export default class Canvas implements ICanvas{
   private findAllIntersectObjects(): void {
     const overlapObjectIndeces: number[] = [];
     for (let i = 0; i < this.objects.length; i++) {
-      const objectA: IPolygon = this.objects[i];
+      const objectA: Polygon = this.objects[i];
 
       for (let j = i + 1; j < this.objects.length; j++) {
-        const objectB: IPolygon = this.objects[j];
+        const objectB: Polygon = this.objects[j];
 
         if (this.checkSideIntersection(objectA, objectB)) {
           overlapObjectIndeces.push(i);

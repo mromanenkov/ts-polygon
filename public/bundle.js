@@ -352,22 +352,6 @@ var Utils = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/*
-export default class Vector implements IVector {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-
-  constructor(pointA: number[], pointB: number[]) {
-    this.x1 = pointA[0];
-    this.y1 = pointA[1];
-  
-    this.x2 = pointB[0];
-    this.y2 = pointB[1];
-  }
-}
-*/
 var Vector = /** @class */ (function () {
     function Vector(point) {
         this.x = point[0];
