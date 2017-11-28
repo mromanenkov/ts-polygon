@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    //"strict": true,
     "outDir": "./public/",
     "noImplicitAny": true,
     "module": "es6",

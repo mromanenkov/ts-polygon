@@ -1,36 +1,43 @@
+import Vector from './vector';
+
 export default class Polygon {
-  public points: number[][];
+  public vertices: Vector[];
   public strokeColor: string;
   public fillColor: string;
   public isOverlap: boolean;
-  public boundingBox: number[][];
+  public boundingBox: Vector[];
 
-  constructor(points: number[][], strokeColor?: string, fillColor?: string) {
-    this.points = points;
+  constructor(vertices: Vector[], strokeColor?: string, fillColor?: string) {
+    this.vertices = vertices;
     this.strokeColor = strokeColor;
     this.fillColor = fillColor;
     this.isOverlap = false;
   }
   
-  public shift(offset: number[]): void {
-    this.points.forEach((point) => {
-      point[0] += offset[0];
-      point[1] += offset[1];
+  public shift(offset: Vector): void {
+    this.vertices.forEach((vertex) => {
+      vertex.x += offset.x;
+      vertex.y += offset.y;
     });
   }
   
   public setBoundingBox(): void {
-    const minX: number = this.points.reduce((min, item) =>
-        (item[0] < min ? item[0] : min),    this.points[0][0]);
-    const maxX: number = this.points.reduce((min, item) =>
-        (item[0] > min ? item[0] : min),    this.points[0][0]);
-    const minY: number = this.points.reduce((min, item) =>
-        (item[1] < min ? item[1] : min),    this.points[0][1]);
-    const maxY: number = this.points.reduce((min, item) =>
-        (item[1] > min ? item[1] : min),    this.points[0][1]);
-    this.boundingBox = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
+    const minX: number = this.vertices.reduce((min, vertex) =>
+        (vertex.x < min ? vertex.x : min),    this.vertices[0].x);
+    const maxX: number = this.vertices.reduce((min, vertex) =>
+        (vertex.x > min ? vertex.x : min),    this.vertices[0].x);
+    const minY: number = this.vertices.reduce((min, vertex) =>
+        (vertex.y < min ? vertex.y : min),    this.vertices[0].y);
+    const maxY: number = this.vertices.reduce((min, vertex) =>
+        (vertex.y > min ? vertex.y : min),    this.vertices[0].y);
+        
+    this.boundingBox = [new Vector(minX, minY), new Vector(maxX, minY),
+      new Vector(maxX, maxY), new Vector(minX, maxY)];
+  }
+
+  public clone(): Polygon {
+    const vertCopy: Vector[] = this.vertices.slice();
+    const newPoly = new Polygon(vertCopy, this.strokeColor, this.fillColor);
+    return newPoly;
   }
 }
-
-  
-  

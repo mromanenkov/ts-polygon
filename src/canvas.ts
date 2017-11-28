@@ -1,6 +1,6 @@
 import utils from './utils';
 import Polygon from './polygon';
-
+import Vector from './vector';
 import ISetting from './interfaces/canvas-setting.interface';
 
 export default class Canvas {
@@ -8,9 +8,9 @@ export default class Canvas {
   setting: ISetting;
   objects: Polygon[];
   selectedObject: Polygon;
-  element: any;
+  element: HTMLElement;
   ctx: CanvasRenderingContext2D;
-  nextObjListPos: number[];
+  nextObjListPos: Vector;
 
   constructor(id: string, setting: ISetting, objects?: Polygon[]) {
     this.id = id;
@@ -19,10 +19,10 @@ export default class Canvas {
     this.selectedObject = null;
     this.element = document.getElementById(id);
     this.ctx = this.element.getContext('2d');
-    this.nextObjListPos = [this.setting.padding, this.setting.padding];
+    this.nextObjListPos = new Vector(this.setting.padding, this.setting.padding);
   }
 
-  public init(): any {
+  public init() {
     this.element.width = this.setting.width;
     this.element.height = this.setting.height;
   }
@@ -31,12 +31,12 @@ export default class Canvas {
     this.objects.push(object);
     object.setBoundingBox();
 
-    const offset = [this.nextObjListPos[0] - object.boundingBox[0][0],
-      this.nextObjListPos[1] - object.boundingBox[0][1]];
+    const offset = new Vector(this.nextObjListPos.x - object.boundingBox[0].x,
+                              this.nextObjListPos.y - object.boundingBox[0].y);
 
     object.shift(offset);
     object.setBoundingBox();
-    this.nextObjListPos[1] = object.boundingBox[object.boundingBox.length - 1][1] +
+    this.nextObjListPos.y = object.boundingBox[object.boundingBox.length - 1].y +
       this.setting.polygonMargin;
     this.update();
   }
@@ -53,21 +53,23 @@ export default class Canvas {
 
     this.ctx.save();
     this.ctx.beginPath();
-    this.ctx.moveTo(object.points[0][0], object.points[0][1]);
-    object.points.forEach((point) => {
-      this.ctx.lineTo(point[0], point[1]);
+    this.ctx.moveTo(object.vertices[0].x, object.vertices[0].y);
+    object.vertices.forEach((vertex) => {
+      this.ctx.lineTo(vertex.x, vertex.y);
     });
     this.ctx.closePath();
     this.ctx.stroke();
     this.ctx.restore();
 
-    if (isFill) this.ctx.fill();
+    if (isFill) {
+      this.ctx.fill();
+    }
   }
 
   public update(): void {
     this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
-    this.findAllIntersectObjects();
+    this.updateIntersectingObjects();
     this.checkVertexInPolyAll();
 
     this.objects.forEach((object) => {
@@ -75,34 +77,35 @@ export default class Canvas {
     });
   }
 
-  public getSelectedObject(cursorPos: number[]): Polygon {
+  public getSelectedObject(cursorPos: Vector): Polygon {
     let selectedObject: Polygon;
     this.objects.forEach((object) => {
-      const isInside = utils.isPointInPoly(cursorPos, object.points);
+
+      const isInside = utils.isPointInPoly(cursorPos, object.vertices);
       if (isInside) selectedObject = object;
     });
     return selectedObject;
   }
 
-
   private checkVertexInPoly(polyA: Polygon, polyB: Polygon): boolean {
     let isInPoly = false;
 
-    polyA.points.forEach((point) => {
-      isInPoly = utils.isPointInPoly(point, polyB.points);
-      if (isInPoly) {
-        isInPoly = true;
-        return false;
-      }
-    });
-    polyB.points.forEach((point) => {
-      isInPoly = utils.isPointInPoly(point, polyA.points);
+    polyA.vertices.forEach((vertex) => {
+      isInPoly = utils.isPointInPoly(vertex, polyB.vertices);
       if (isInPoly) {
         isInPoly = true;
         return false;
       }
     });
 
+    polyB.vertices.forEach((vertex) => {
+
+      isInPoly = utils.isPointInPoly(vertex, polyA.vertices);
+      if (isInPoly) {
+        isInPoly = true;
+        return false;
+      }
+    });
     return isInPoly;
   }
 
@@ -124,23 +127,23 @@ export default class Canvas {
   }
 
   private checkSideIntersection(polyA: Polygon, polyB: Polygon): boolean {
-    const pointsAcopy: number[][] = JSON.parse(JSON.stringify(polyA.points));
-    const pointsBcopy: number[][] = JSON.parse(JSON.stringify(polyB.points));
+    const polyAcopy: Polygon = polyA.clone();
+    const polyBcopy: Polygon = polyB.clone();
 
-    const polyAcopy: Polygon = new Polygon(pointsAcopy);
-    const polyBcopy: Polygon = new Polygon(pointsBcopy);
-
-    polyAcopy.points.push(polyAcopy.points[0]);
-    polyBcopy.points.push(polyBcopy.points[0]);
+    polyAcopy.vertices.push(polyAcopy.vertices[0]);
+    polyBcopy.vertices.push(polyBcopy.vertices[0]);
 
     let isIntersect: boolean = false;
-    for (let i = 0; i < polyAcopy.points.length - 1; i++) {
-      const sideA: number[][] = [polyAcopy.points[i], polyAcopy.points[i + 1]];
+    for (let i = 0; i < polyAcopy.vertices.length - 1; i++) {
+      const sideA: Vector[] = [polyAcopy.vertices[i], polyAcopy.vertices[i + 1]];
 
-      for (let j = 0; j < polyBcopy.points.length - 1; j++) {
-        const sideB: number[][] = [polyBcopy.points[j], polyBcopy.points[j + 1]];
+      for (let j = 0; j < polyBcopy.vertices.length - 1; j++) {
+        const sideB: Vector[] = [polyBcopy.vertices[j], polyBcopy.vertices[j + 1]];
 
-        isIntersect = utils.getIntersection(sideA, sideB);
+        const sideAVec = [new Vector(sideA[0].x, sideA[0].y), new Vector(sideA[1].x, sideA[1].y)];
+        const sideBVec = [new Vector(sideB[0].x, sideB[0].y), new Vector(sideB[1].x, sideB[1].y)];
+        
+        isIntersect = utils.getIntersection(sideAVec, sideBVec);
         if (isIntersect) return true;
       }
     }
@@ -148,15 +151,10 @@ export default class Canvas {
   }
 
   private findOverlappedObject(polyA: Polygon, polyB: Polygon): boolean {
-    let isOverlap: boolean = false;
-    if (this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB)) {
-      isOverlap = true;
-    }
-    return isOverlap;
+    return this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB);
   }
 
-
-  private findAllIntersectObjects(): void {
+  private updateIntersectingObjects(): void {
     const overlapObjectIndeces: number[] = [];
     for (let i = 0; i < this.objects.length; i++) {
       const objectA: Polygon = this.objects[i];
