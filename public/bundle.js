@@ -73,6 +73,9 @@ var Vector = /** @class */ (function () {
         this.x = x;
         this.y = y;
     }
+    Vector.prototype.substract = function (deduction) {
+        return new Vector(this.x - deduction.x, this.y - deduction.y);
+    };
     return Vector;
 }());
 /* harmony default export */ __webpack_exports__["a"] = (Vector);
@@ -109,24 +112,26 @@ var setting = {
     polygonMargin: 20,
 };
 var cursor = new __WEBPACK_IMPORTED_MODULE_2__cursor__["a" /* default */]();
-var canvas = new __WEBPACK_IMPORTED_MODULE_1__canvas__["a" /* default */]('example', setting);
-window.addEventListener('load', canvas.init());
-var polygons = [poly1, poly2, poly3];
-canvas.addArr(polygons);
-canvas.element.addEventListener('mousedown', function (e) {
-    cursor.cursorDownPos.x = e.offsetX;
-    cursor.cursorDownPos.y = e.offsetY;
-    canvas.selectedObject = canvas.getSelectedObject(cursor.cursorDownPos);
-});
-canvas.element.addEventListener('mouseup', function (e) {
-    cursor.cursorUpPos.x = e.offsetX;
-    cursor.cursorUpPos.y = e.offsetY;
-    var offset = cursor.getOffset();
-    if (canvas.selectedObject) {
-        canvas.selectedObject.shift(offset);
-        canvas.update();
-    }
-    canvas.selectedObject = null;
+var canvas = new __WEBPACK_IMPORTED_MODULE_1__canvas__["a" /* Canvas */]('example', setting);
+window.addEventListener('load', function () {
+    canvas.init();
+    var polygons = [poly1, poly2, poly3];
+    canvas.addArr(polygons);
+    canvas.element.addEventListener('mousedown', function (e) {
+        cursor.cursorDownPos.x = e.offsetX;
+        cursor.cursorDownPos.y = e.offsetY;
+        canvas.selectedObject = canvas.getSelectedObject(cursor.cursorDownPos);
+    });
+    canvas.element.addEventListener('mouseup', function (e) {
+        cursor.cursorUpPos.x = e.offsetX;
+        cursor.cursorUpPos.y = e.offsetY;
+        var offset = cursor.getOffset();
+        if (canvas.selectedObject) {
+            canvas.selectedObject.shift(offset);
+            canvas.update();
+        }
+        canvas.selectedObject = null;
+    });
 });
 
 
@@ -140,15 +145,17 @@ canvas.element.addEventListener('mouseup', function (e) {
 var Polygon = /** @class */ (function () {
     function Polygon(vertices, strokeColor, fillColor) {
         this.vertices = vertices;
-        this.strokeColor = strokeColor;
-        this.fillColor = fillColor;
+        this.strokeColor = strokeColor || '#000';
+        this.fillColor = fillColor || '#fff';
         this.isOverlap = false;
+        this.setBoundingBox();
     }
     Polygon.prototype.shift = function (offset) {
         this.vertices.forEach(function (vertex) {
             vertex.x += offset.x;
             vertex.y += offset.y;
         });
+        this.setBoundingBox();
     };
     Polygon.prototype.setBoundingBox = function () {
         var minX = this.vertices.reduce(function (min, vertex) {
@@ -181,6 +188,7 @@ var Polygon = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Canvas; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__vector__ = __webpack_require__(0);
 
@@ -201,10 +209,8 @@ var Canvas = /** @class */ (function () {
     };
     Canvas.prototype.add = function (object) {
         this.objects.push(object);
-        object.setBoundingBox();
-        var offset = new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](this.nextObjListPos.x - object.boundingBox[0].x, this.nextObjListPos.y - object.boundingBox[0].y);
+        var offset = this.nextObjListPos.substract(object.boundingBox[0]);
         object.shift(offset);
-        object.setBoundingBox();
         this.nextObjListPos.y = object.boundingBox[object.boundingBox.length - 1].y +
             this.setting.polygonMargin;
         this.update();
@@ -215,11 +221,11 @@ var Canvas = /** @class */ (function () {
             _this.add(object);
         });
     };
-    Canvas.prototype.draw = function (object, isFill) {
+    Canvas.prototype.draw = function (object) {
         var _this = this;
+        this.ctx.save();
         this.ctx.fillStyle = object.fillColor;
         this.ctx.strokeStyle = object.strokeColor;
-        this.ctx.save();
         this.ctx.beginPath();
         this.ctx.moveTo(object.vertices[0].x, object.vertices[0].y);
         object.vertices.forEach(function (vertex) {
@@ -227,10 +233,10 @@ var Canvas = /** @class */ (function () {
         });
         this.ctx.closePath();
         this.ctx.stroke();
-        this.ctx.restore();
-        if (isFill) {
+        if (object.isOverlap) {
             this.ctx.fill();
         }
+        this.ctx.restore();
     };
     Canvas.prototype.update = function () {
         var _this = this;
@@ -238,15 +244,16 @@ var Canvas = /** @class */ (function () {
         this.updateIntersectingObjects();
         this.checkVertexInPolyAll();
         this.objects.forEach(function (object) {
-            object.isOverlap ? _this.draw(object, true) : _this.draw(object);
+            _this.draw(object);
         });
     };
     Canvas.prototype.getSelectedObject = function (cursorPos) {
-        var selectedObject;
+        var selectedObject = null;
         this.objects.forEach(function (object) {
             var isInside = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(cursorPos, object.vertices);
-            if (isInside)
+            if (isInside) {
                 selectedObject = object;
+            }
         });
         return selectedObject;
     };
@@ -256,14 +263,12 @@ var Canvas = /** @class */ (function () {
             isInPoly = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(vertex, polyB.vertices);
             if (isInPoly) {
                 isInPoly = true;
-                return false;
             }
         });
         polyB.vertices.forEach(function (vertex) {
             isInPoly = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(vertex, polyA.vertices);
             if (isInPoly) {
                 isInPoly = true;
-                return false;
             }
         });
         return isInPoly;
@@ -272,8 +277,9 @@ var Canvas = /** @class */ (function () {
         for (var i = 0; i < this.objects.length; i++) {
             var objectA = this.objects[i];
             for (var j = 0; j < this.objects.length; j++) {
-                if (i === j)
+                if (i === j) {
                     continue;
+                }
                 var objectB = this.objects[j];
                 var isInPoly = this.checkVertexInPoly(objectA, objectB);
                 if (isInPoly) {
@@ -296,8 +302,9 @@ var Canvas = /** @class */ (function () {
                 var sideAVec = [new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](sideA[0].x, sideA[0].y), new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](sideA[1].x, sideA[1].y)];
                 var sideBVec = [new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](sideB[0].x, sideB[0].y), new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](sideB[1].x, sideB[1].y)];
                 isIntersect = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].getIntersection(sideAVec, sideBVec);
-                if (isIntersect)
+                if (isIntersect) {
                     return true;
+                }
             }
         }
         return isIntersect;
@@ -306,24 +313,23 @@ var Canvas = /** @class */ (function () {
         return this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB);
     };
     Canvas.prototype.updateIntersectingObjects = function () {
-        var overlapObjectIndeces = [];
+        var overlapingObjects = new Set();
         for (var i = 0; i < this.objects.length; i++) {
             var objectA = this.objects[i];
             for (var j = i + 1; j < this.objects.length; j++) {
                 var objectB = this.objects[j];
                 if (this.checkSideIntersection(objectA, objectB)) {
-                    overlapObjectIndeces.push(i);
-                    overlapObjectIndeces.push(j);
+                    overlapingObjects.add(objectA).add(objectB);
                 }
             }
         }
-        for (var i = 0; i < this.objects.length; i++) {
-            this.objects[i].isOverlap = overlapObjectIndeces.indexOf(i) >= 0;
-        }
+        this.objects.forEach(function (object) {
+            object.isOverlap = overlapingObjects.has(object);
+        });
     };
     return Canvas;
 }());
-/* harmony default export */ __webpack_exports__["a"] = (Canvas);
+
 
 
 /***/ }),
@@ -343,8 +349,9 @@ var Utils = /** @class */ (function () {
             var vj = polyVertices[j];
             var intersect = ((vi.y > vertex.y) !== (vj.y > vertex.y))
                 && (vertex.x < (vj.x - vi.x) * (vertex.y - vi.y) / (vj.y - vi.y) + vi.x);
-            if (intersect)
+            if (intersect) {
                 inside = !inside;
+            }
         }
         return inside;
     };
@@ -388,8 +395,7 @@ var Cursor = /** @class */ (function () {
         configurable: true
     });
     Cursor.prototype.getOffset = function () {
-        var offset = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](this.cursorUpPos.x - this.cursorDownPos.x, this.cursorUpPos.y - this.cursorDownPos.y);
-        return offset;
+        return this.cursorUpPos.substract(this.cursorDownPos);
     };
     return Cursor;
 }());

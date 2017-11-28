@@ -1,8 +1,7 @@
 import Polygon from './polygon';
-import Canvas from './canvas';
+import { Canvas, ISetting }  from  './canvas';
 import Cursor from './cursor';
 import Vector from './vector';
-import ISetting from './interfaces/canvas-setting.interface';
 
 const polygonPointsA: Vector[] = [new Vector(100, 100), new Vector(200, 100),
   new Vector(200, 200), new Vector(100, 200)];
@@ -26,26 +25,26 @@ const setting: ISetting = {
 const cursor = new Cursor();
 const canvas = new Canvas('example', setting);
 
-window.addEventListener('load', canvas.init());
-
-const polygons = [poly1, poly2, poly3];
-canvas.addArr(polygons);
-
-canvas.element.addEventListener('mousedown', (e: MouseEvent) => {
-  cursor.cursorDownPos.x = e.offsetX;
-  cursor.cursorDownPos.y = e.offsetY;
-  canvas.selectedObject = canvas.getSelectedObject(cursor.cursorDownPos);
+window.addEventListener('load', () => {
+  canvas.init();
+  const polygons = [poly1, poly2, poly3];
+  canvas.addArr(polygons);
+  
+  canvas.element.addEventListener('mousedown', (e: MouseEvent) => {
+    cursor.cursorDownPos.x = e.offsetX;
+    cursor.cursorDownPos.y = e.offsetY;
+    canvas.selectedObject = canvas.getSelectedObject(cursor.cursorDownPos);
+  });
+  
+  canvas.element.addEventListener('mouseup', (e: MouseEvent) => {
+    cursor.cursorUpPos.x = e.offsetX;
+    cursor.cursorUpPos.y = e.offsetY;
+    const offset = cursor.getOffset();
+  
+    if (canvas.selectedObject) {
+      canvas.selectedObject.shift(offset);
+      canvas.update();
+    }
+    canvas.selectedObject = null;
+  });
 });
-
-canvas.element.addEventListener('mouseup', (e: MouseEvent) => {
-  cursor.cursorUpPos.x = e.offsetX;
-  cursor.cursorUpPos.y = e.offsetY;
-  const offset = cursor.getOffset();
-
-  if (canvas.selectedObject) {
-    canvas.selectedObject.shift(offset);
-    canvas.update();
-  }
-  canvas.selectedObject = null;
-});
-

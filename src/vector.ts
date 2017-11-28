@@ -6,4 +6,8 @@ export default class Vector {
     this.x = x;
     this.y = y;
   }
+
+  public substract(deduction: Vector): Vector {
+    return new Vector(this.x - deduction.x, this.y - deduction.y);
+  }
 }

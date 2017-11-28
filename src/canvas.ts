@@ -1,14 +1,20 @@
 import utils from './utils';
 import Polygon from './polygon';
 import Vector from './vector';
-import ISetting from './interfaces/canvas-setting.interface';
 
-export default class Canvas {
+export interface ISetting {
+  width: number;
+  height: number;
+  padding: number;
+  polygonMargin: number;
+}
+
+export class Canvas {
   id: string;
   setting: ISetting;
   objects: Polygon[];
-  selectedObject: Polygon;
-  element: HTMLElement;
+  selectedObject: Polygon | null;
+  element: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   nextObjListPos: Vector;
 
@@ -17,8 +23,8 @@ export default class Canvas {
     this.setting = setting;
     this.objects = objects || [];
     this.selectedObject = null;
-    this.element = document.getElementById(id);
-    this.ctx = this.element.getContext('2d');
+    this.element = document.getElementById(id) as HTMLCanvasElement;
+    this.ctx = this.element.getContext('2d')!;
     this.nextObjListPos = new Vector(this.setting.padding, this.setting.padding);
   }
 
@@ -29,13 +35,10 @@ export default class Canvas {
 
   public add(object: Polygon): void {
     this.objects.push(object);
-    object.setBoundingBox();
 
-    const offset = new Vector(this.nextObjListPos.x - object.boundingBox[0].x,
-                              this.nextObjListPos.y - object.boundingBox[0].y);
+    const offset = this.nextObjListPos.substract(object.boundingBox[0]);
 
     object.shift(offset);
-    object.setBoundingBox();
     this.nextObjListPos.y = object.boundingBox[object.boundingBox.length - 1].y +
       this.setting.polygonMargin;
     this.update();
@@ -47,11 +50,10 @@ export default class Canvas {
     });
   }
 
-  public draw(object: Polygon, isFill?: boolean): void {
+  public draw(object: Polygon): void {
+    this.ctx.save();
     this.ctx.fillStyle = object.fillColor;
     this.ctx.strokeStyle = object.strokeColor;
-
-    this.ctx.save();
     this.ctx.beginPath();
     this.ctx.moveTo(object.vertices[0].x, object.vertices[0].y);
     object.vertices.forEach((vertex) => {
@@ -59,11 +61,12 @@ export default class Canvas {
     });
     this.ctx.closePath();
     this.ctx.stroke();
-    this.ctx.restore();
 
-    if (isFill) {
+    if (object.isOverlap) {
       this.ctx.fill();
     }
+
+    this.ctx.restore();
   }
 
   public update(): void {
@@ -73,37 +76,34 @@ export default class Canvas {
     this.checkVertexInPolyAll();
 
     this.objects.forEach((object) => {
-      object.isOverlap ? this.draw(object, true) : this.draw(object);
+      this.draw(object);
     });
   }
 
-  public getSelectedObject(cursorPos: Vector): Polygon {
-    let selectedObject: Polygon;
+  public getSelectedObject(cursorPos: Vector): Polygon | null {
+    let selectedObject: Polygon | null = null;
     this.objects.forEach((object) => {
-
       const isInside = utils.isPointInPoly(cursorPos, object.vertices);
-      if (isInside) selectedObject = object;
+      if (isInside) {
+        selectedObject = object;
+      }
     });
     return selectedObject;
   }
 
   private checkVertexInPoly(polyA: Polygon, polyB: Polygon): boolean {
     let isInPoly = false;
-
     polyA.vertices.forEach((vertex) => {
       isInPoly = utils.isPointInPoly(vertex, polyB.vertices);
       if (isInPoly) {
         isInPoly = true;
-        return false;
       }
     });
 
     polyB.vertices.forEach((vertex) => {
-
       isInPoly = utils.isPointInPoly(vertex, polyA.vertices);
       if (isInPoly) {
         isInPoly = true;
-        return false;
       }
     });
     return isInPoly;
@@ -112,12 +112,12 @@ export default class Canvas {
   private checkVertexInPolyAll(): void {
     for (let i = 0; i < this.objects.length; i++) {
       const objectA: Polygon = this.objects[i];
-
       for (let j = 0; j < this.objects.length; j++) {
-        if (i === j) continue;
+        if (i === j) {
+          continue;
+        }
         const objectB: Polygon = this.objects[j];
         const isInPoly: boolean = this.checkVertexInPoly(objectA, objectB);
-
         if (isInPoly) {
           objectA.isOverlap = true;
           objectB.isOverlap = true;
@@ -129,22 +129,23 @@ export default class Canvas {
   private checkSideIntersection(polyA: Polygon, polyB: Polygon): boolean {
     const polyAcopy: Polygon = polyA.clone();
     const polyBcopy: Polygon = polyB.clone();
-
     polyAcopy.vertices.push(polyAcopy.vertices[0]);
     polyBcopy.vertices.push(polyBcopy.vertices[0]);
-
+    
     let isIntersect: boolean = false;
     for (let i = 0; i < polyAcopy.vertices.length - 1; i++) {
       const sideA: Vector[] = [polyAcopy.vertices[i], polyAcopy.vertices[i + 1]];
 
       for (let j = 0; j < polyBcopy.vertices.length - 1; j++) {
-        const sideB: Vector[] = [polyBcopy.vertices[j], polyBcopy.vertices[j + 1]];
 
+        const sideB: Vector[] = [polyBcopy.vertices[j], polyBcopy.vertices[j + 1]];
         const sideAVec = [new Vector(sideA[0].x, sideA[0].y), new Vector(sideA[1].x, sideA[1].y)];
         const sideBVec = [new Vector(sideB[0].x, sideB[0].y), new Vector(sideB[1].x, sideB[1].y)];
-        
+
         isIntersect = utils.getIntersection(sideAVec, sideBVec);
-        if (isIntersect) return true;
+        if (isIntersect) {
+          return true;
+        }
       }
     }
     return isIntersect;
@@ -155,7 +156,7 @@ export default class Canvas {
   }
 
   private updateIntersectingObjects(): void {
-    const overlapObjectIndeces: number[] = [];
+    const overlapingObjects = new Set();
     for (let i = 0; i < this.objects.length; i++) {
       const objectA: Polygon = this.objects[i];
 
@@ -163,13 +164,13 @@ export default class Canvas {
         const objectB: Polygon = this.objects[j];
 
         if (this.checkSideIntersection(objectA, objectB)) {
-          overlapObjectIndeces.push(i);
-          overlapObjectIndeces.push(j);
+          overlapingObjects.add(objectA).add(objectB);
         }
       }
     }
-    for (let i = 0; i < this.objects.length; i++) {
-      this.objects[i].isOverlap = overlapObjectIndeces.indexOf(i) >= 0;
-    }
+
+    this.objects.forEach((object) => {
+      object.isOverlap = overlapingObjects.has(object);
+    });
   }
 }

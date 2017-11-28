@@ -12,7 +12,9 @@ export default class Utils {
 
       const intersect: boolean = ((vi.y > vertex.y) !== (vj.y > vertex.y))
         && (vertex.x < (vj.x - vi.x) * (vertex.y - vi.y) / (vj.y - vi.y) + vi.x);
-      if (intersect) inside = !inside;
+      if (intersect) {
+        inside = !inside;
+      }
     }
     return inside;
   }
@@ -27,7 +29,6 @@ export default class Utils {
     const x: number = ((v1.x * v2.y - v1.y * v2.x) * 
                       (v3.x - v4.x) - (v1.x - v2.x) * (v3.x * v4.y - v3.y * v4.x)) /
                       ((v1.x - v2.x) * (v3.y - v4.y) - (v1.y - v2.y) * (v3.x - v4.x));
-
     const y: number = ((v1.x * v2.y - v1.y * v2.x) *
                       (v3.y - v4.y) - (v1.y - v2.y) * (v3.x * v4.y - v3.y * v4.x)) /
                       ((v1.x - v2.x) * (v3.y - v4.y) - (v1.y - v2.y) * (v3.x - v4.x));

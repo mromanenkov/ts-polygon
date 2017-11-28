@@ -9,9 +9,10 @@ export default class Polygon {
 
   constructor(vertices: Vector[], strokeColor?: string, fillColor?: string) {
     this.vertices = vertices;
-    this.strokeColor = strokeColor;
-    this.fillColor = fillColor;
+    this.strokeColor = strokeColor || '#000';
+    this.fillColor = fillColor || '#fff';
     this.isOverlap = false;
+    this.setBoundingBox();
   }
   
   public shift(offset: Vector): void {
@@ -19,6 +20,7 @@ export default class Polygon {
       vertex.x += offset.x;
       vertex.y += offset.y;
     });
+    this.setBoundingBox();
   }
   
   public setBoundingBox(): void {

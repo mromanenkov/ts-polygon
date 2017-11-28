@@ -12,8 +12,6 @@ export default class Cursor {
   }
 
   public getOffset(): Vector {
-    const offset = new Vector(this.cursorUpPos.x - this.cursorDownPos.x,
-                              this.cursorUpPos.y - this.cursorDownPos.y);
-    return offset;
+    return this.cursorUpPos.substract(this.cursorDownPos);
   }
 }
