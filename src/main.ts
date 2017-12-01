@@ -9,11 +9,9 @@ const polygonPointsB: Vector[] = [new Vector(300, 400), new Vector(450, 300), ne
 const polygonPointsC: Vector[] = [new Vector(0, 20), new Vector(20, 0),
   new Vector(40, 10), new Vector(40, 30), new Vector(30, 40)];
 
-const strokeColor: string = '#000';
-const fillColor: string = '#f00';
-const poly1: Polygon = new Polygon(polygonPointsA, strokeColor, fillColor);
-const poly2: Polygon = new Polygon(polygonPointsB, strokeColor, fillColor);
-const poly3: Polygon = new Polygon(polygonPointsC, strokeColor, fillColor);
+const poly1: Polygon = new Polygon(polygonPointsA);
+const poly2: Polygon = new Polygon(polygonPointsB);
+const poly3: Polygon = new Polygon(polygonPointsC);
 
 const setting: ISetting = {
   width: window.innerWidth - window.innerWidth * 0.02,

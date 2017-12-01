@@ -10,22 +10,25 @@ export interface ISetting {
 }
 
 export class Canvas {
-  id: string;
-  setting: ISetting;
-  objects: Polygon[];
-  selectedObject: Polygon | null;
-  element: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-  nextObjListPos: Vector;
+  private id: string;
+  private setting: ISetting;
+  private objects: Polygon[];
+  private nextObjListPos: Vector;
+  private strokeColor: string;
+  private fillColor: string;
+  public selectedObject: Polygon | null;
+  public element: HTMLCanvasElement;
 
   constructor(id: string, setting: ISetting, objects?: Polygon[]) {
     this.id = id;
     this.setting = setting;
     this.objects = objects || [];
+    this.nextObjListPos = new Vector(this.setting.padding, this.setting.padding);
+    this.strokeColor = '#000';
+    this.fillColor = '#f00';
     this.selectedObject = null;
     this.element = document.getElementById(id) as HTMLCanvasElement;
-    this.ctx = this.element.getContext('2d')!;
-    this.nextObjListPos = new Vector(this.setting.padding, this.setting.padding);
+    
   }
 
   public init() {
@@ -51,26 +54,28 @@ export class Canvas {
   }
 
   public draw(object: Polygon): void {
-    this.ctx.save();
-    this.ctx.fillStyle = object.fillColor;
-    this.ctx.strokeStyle = object.strokeColor;
-    this.ctx.beginPath();
-    this.ctx.moveTo(object.vertices[0].x, object.vertices[0].y);
+    const ctx = this.element.getContext('2d')!;
+    ctx.save();
+    ctx.fillStyle = this.fillColor;
+    ctx.strokeStyle = this.strokeColor;
+    ctx.beginPath();
+    ctx.moveTo(object.vertices[0].x, object.vertices[0].y);
     object.vertices.forEach((vertex) => {
-      this.ctx.lineTo(vertex.x, vertex.y);
+      ctx.lineTo(vertex.x, vertex.y);
     });
-    this.ctx.closePath();
-    this.ctx.stroke();
+    ctx.closePath();
+    ctx.stroke();
 
     if (object.isOverlap) {
-      this.ctx.fill();
+      ctx.fill();
     }
 
-    this.ctx.restore();
+    ctx.restore();
   }
 
   public update(): void {
-    this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
+    const ctx = this.element.getContext('2d')!;
+    ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
     this.updateIntersectingObjects();
     this.checkVertexInPolyAll();
@@ -81,31 +86,24 @@ export class Canvas {
   }
 
   public getSelectedObject(cursorPos: Vector): Polygon | null {
-    let selectedObject: Polygon | null = null;
-    this.objects.forEach((object) => {
-      const isInside = utils.isPointInPoly(cursorPos, object.vertices);
-      if (isInside) {
-        selectedObject = object;
-      }
+    let selectedObject: Polygon | null | undefined = null;
+
+    selectedObject = this.objects.find((object) => {
+      return utils.isPointInPoly(cursorPos, object.vertices);
     });
-    return selectedObject;
+    return selectedObject ? selectedObject : null;
   }
 
   private checkVertexInPoly(polyA: Polygon, polyB: Polygon): boolean {
-    let isInPoly = false;
-    polyA.vertices.forEach((vertex) => {
-      isInPoly = utils.isPointInPoly(vertex, polyB.vertices);
-      if (isInPoly) {
-        isInPoly = true;
-      }
-    });
+    let isInPoly: boolean = false;
 
-    polyB.vertices.forEach((vertex) => {
-      isInPoly = utils.isPointInPoly(vertex, polyA.vertices);
-      if (isInPoly) {
-        isInPoly = true;
-      }
+    isInPoly = polyA.vertices.some((vertex) => {
+      return utils.isPointInPoly(vertex, polyB.vertices);
     });
+    isInPoly = polyB.vertices.some((vertex) => {
+      return utils.isPointInPoly(vertex, polyA.vertices);
+    });
+  
     return isInPoly;
   }
 
@@ -127,18 +125,17 @@ export class Canvas {
   }
 
   private checkSideIntersection(polyA: Polygon, polyB: Polygon): boolean {
-    const polyAcopy: Polygon = polyA.clone();
-    const polyBcopy: Polygon = polyB.clone();
-    polyAcopy.vertices.push(polyAcopy.vertices[0]);
-    polyBcopy.vertices.push(polyBcopy.vertices[0]);
+
+    const verticesA = [...polyA.vertices, polyA.vertices[0]];
+    const verticesB = [...polyB.vertices, polyB.vertices[0]];
     
     let isIntersect: boolean = false;
-    for (let i = 0; i < polyAcopy.vertices.length - 1; i++) {
-      const sideA: Vector[] = [polyAcopy.vertices[i], polyAcopy.vertices[i + 1]];
+    for (let i = 0; i < verticesA.length - 1; i++) {
+      const sideA: Vector[] = [verticesA[i], verticesA[i + 1]];
 
-      for (let j = 0; j < polyBcopy.vertices.length - 1; j++) {
+      for (let j = 0; j < verticesB.length - 1; j++) {
 
-        const sideB: Vector[] = [polyBcopy.vertices[j], polyBcopy.vertices[j + 1]];
+        const sideB: Vector[] = [verticesB[j], verticesB[j + 1]];
         const sideAVec = [new Vector(sideA[0].x, sideA[0].y), new Vector(sideA[1].x, sideA[1].y)];
         const sideBVec = [new Vector(sideB[0].x, sideB[0].y), new Vector(sideB[1].x, sideB[1].y)];
 

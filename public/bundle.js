@@ -76,6 +76,9 @@ var Vector = /** @class */ (function () {
     Vector.prototype.substract = function (deduction) {
         return new Vector(this.x - deduction.x, this.y - deduction.y);
     };
+    Vector.prototype.add = function (term) {
+        return new Vector(this.x + term.x, this.y + term.y);
+    };
     return Vector;
 }());
 /* harmony default export */ __webpack_exports__["a"] = (Vector);
@@ -100,11 +103,9 @@ var polygonPointsA = [new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default *
 var polygonPointsB = [new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default */](300, 400), new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default */](450, 300), new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default */](470, 370)];
 var polygonPointsC = [new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default */](0, 20), new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default */](20, 0),
     new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default */](40, 10), new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default */](40, 30), new __WEBPACK_IMPORTED_MODULE_3__vector__["a" /* default */](30, 40)];
-var strokeColor = '#000';
-var fillColor = '#f00';
-var poly1 = new __WEBPACK_IMPORTED_MODULE_0__polygon__["a" /* default */](polygonPointsA, strokeColor, fillColor);
-var poly2 = new __WEBPACK_IMPORTED_MODULE_0__polygon__["a" /* default */](polygonPointsB, strokeColor, fillColor);
-var poly3 = new __WEBPACK_IMPORTED_MODULE_0__polygon__["a" /* default */](polygonPointsC, strokeColor, fillColor);
+var poly1 = new __WEBPACK_IMPORTED_MODULE_0__polygon__["a" /* default */](polygonPointsA);
+var poly2 = new __WEBPACK_IMPORTED_MODULE_0__polygon__["a" /* default */](polygonPointsB);
+var poly3 = new __WEBPACK_IMPORTED_MODULE_0__polygon__["a" /* default */](polygonPointsC);
 var setting = {
     width: window.innerWidth - window.innerWidth * 0.02,
     height: window.innerHeight - window.innerWidth * 0.02,
@@ -143,40 +144,38 @@ window.addEventListener('load', function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__vector__ = __webpack_require__(0);
 
 var Polygon = /** @class */ (function () {
-    function Polygon(vertices, strokeColor, fillColor) {
+    function Polygon(vertices) {
         this.vertices = vertices;
-        this.strokeColor = strokeColor || '#000';
-        this.fillColor = fillColor || '#fff';
         this.isOverlap = false;
         this.setBoundingBox();
     }
     Polygon.prototype.shift = function (offset) {
-        this.vertices.forEach(function (vertex) {
-            vertex.x += offset.x;
-            vertex.y += offset.y;
-        });
+        for (var i = 0; i < this.vertices.length; i++) {
+            this.vertices[i] = this.vertices[i].add(offset);
+        }
         this.setBoundingBox();
     };
     Polygon.prototype.setBoundingBox = function () {
-        var minX = this.vertices.reduce(function (min, vertex) {
-            return (vertex.x < min ? vertex.x : min);
-        }, this.vertices[0].x);
-        var maxX = this.vertices.reduce(function (min, vertex) {
-            return (vertex.x > min ? vertex.x : min);
-        }, this.vertices[0].x);
-        var minY = this.vertices.reduce(function (min, vertex) {
-            return (vertex.y < min ? vertex.y : min);
-        }, this.vertices[0].y);
-        var maxY = this.vertices.reduce(function (min, vertex) {
-            return (vertex.y > min ? vertex.y : min);
-        }, this.vertices[0].y);
+        var minX = this.vertices[0].x;
+        var maxX = this.vertices[0].x;
+        var minY = this.vertices[0].y;
+        var maxY = this.vertices[0].y;
+        this.vertices.forEach(function (vertex) {
+            if (vertex.x < minX) {
+                minX = vertex.x;
+            }
+            if (vertex.x > maxX) {
+                maxX = vertex.x;
+            }
+            if (vertex.y < minY) {
+                minY = vertex.y;
+            }
+            if (vertex.y > maxY) {
+                maxY = vertex.y;
+            }
+        });
         this.boundingBox = [new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](minX, minY), new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](maxX, minY),
             new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](maxX, maxY), new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](minX, maxY)];
-    };
-    Polygon.prototype.clone = function () {
-        var vertCopy = this.vertices.slice();
-        var newPoly = new Polygon(vertCopy, this.strokeColor, this.fillColor);
-        return newPoly;
     };
     return Polygon;
 }());
@@ -198,10 +197,11 @@ var Canvas = /** @class */ (function () {
         this.id = id;
         this.setting = setting;
         this.objects = objects || [];
+        this.nextObjListPos = new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](this.setting.padding, this.setting.padding);
+        this.strokeColor = '#000';
+        this.fillColor = '#f00';
         this.selectedObject = null;
         this.element = document.getElementById(id);
-        this.ctx = this.element.getContext('2d');
-        this.nextObjListPos = new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](this.setting.padding, this.setting.padding);
     }
     Canvas.prototype.init = function () {
         this.element.width = this.setting.width;
@@ -222,25 +222,26 @@ var Canvas = /** @class */ (function () {
         });
     };
     Canvas.prototype.draw = function (object) {
-        var _this = this;
-        this.ctx.save();
-        this.ctx.fillStyle = object.fillColor;
-        this.ctx.strokeStyle = object.strokeColor;
-        this.ctx.beginPath();
-        this.ctx.moveTo(object.vertices[0].x, object.vertices[0].y);
+        var ctx = this.element.getContext('2d');
+        ctx.save();
+        ctx.fillStyle = this.fillColor;
+        ctx.strokeStyle = this.strokeColor;
+        ctx.beginPath();
+        ctx.moveTo(object.vertices[0].x, object.vertices[0].y);
         object.vertices.forEach(function (vertex) {
-            _this.ctx.lineTo(vertex.x, vertex.y);
+            ctx.lineTo(vertex.x, vertex.y);
         });
-        this.ctx.closePath();
-        this.ctx.stroke();
+        ctx.closePath();
+        ctx.stroke();
         if (object.isOverlap) {
-            this.ctx.fill();
+            ctx.fill();
         }
-        this.ctx.restore();
+        ctx.restore();
     };
     Canvas.prototype.update = function () {
         var _this = this;
-        this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
+        var ctx = this.element.getContext('2d');
+        ctx.clearRect(0, 0, this.setting.width, this.setting.height);
         this.updateIntersectingObjects();
         this.checkVertexInPolyAll();
         this.objects.forEach(function (object) {
@@ -249,27 +250,18 @@ var Canvas = /** @class */ (function () {
     };
     Canvas.prototype.getSelectedObject = function (cursorPos) {
         var selectedObject = null;
-        this.objects.forEach(function (object) {
-            var isInside = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(cursorPos, object.vertices);
-            if (isInside) {
-                selectedObject = object;
-            }
+        selectedObject = this.objects.find(function (object) {
+            return __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(cursorPos, object.vertices);
         });
-        return selectedObject;
+        return selectedObject ? selectedObject : null;
     };
     Canvas.prototype.checkVertexInPoly = function (polyA, polyB) {
         var isInPoly = false;
-        polyA.vertices.forEach(function (vertex) {
-            isInPoly = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(vertex, polyB.vertices);
-            if (isInPoly) {
-                isInPoly = true;
-            }
+        isInPoly = polyA.vertices.some(function (vertex) {
+            return __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(vertex, polyB.vertices);
         });
-        polyB.vertices.forEach(function (vertex) {
-            isInPoly = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(vertex, polyA.vertices);
-            if (isInPoly) {
-                isInPoly = true;
-            }
+        isInPoly = polyB.vertices.some(function (vertex) {
+            return __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(vertex, polyA.vertices);
         });
         return isInPoly;
     };
@@ -290,15 +282,13 @@ var Canvas = /** @class */ (function () {
         }
     };
     Canvas.prototype.checkSideIntersection = function (polyA, polyB) {
-        var polyAcopy = polyA.clone();
-        var polyBcopy = polyB.clone();
-        polyAcopy.vertices.push(polyAcopy.vertices[0]);
-        polyBcopy.vertices.push(polyBcopy.vertices[0]);
+        var verticesA = polyA.vertices.concat([polyA.vertices[0]]);
+        var verticesB = polyB.vertices.concat([polyB.vertices[0]]);
         var isIntersect = false;
-        for (var i = 0; i < polyAcopy.vertices.length - 1; i++) {
-            var sideA = [polyAcopy.vertices[i], polyAcopy.vertices[i + 1]];
-            for (var j = 0; j < polyBcopy.vertices.length - 1; j++) {
-                var sideB = [polyBcopy.vertices[j], polyBcopy.vertices[j + 1]];
+        for (var i = 0; i < verticesA.length - 1; i++) {
+            var sideA = [verticesA[i], verticesA[i + 1]];
+            for (var j = 0; j < verticesB.length - 1; j++) {
+                var sideB = [verticesB[j], verticesB[j + 1]];
                 var sideAVec = [new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](sideA[0].x, sideA[0].y), new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](sideA[1].x, sideA[1].y)];
                 var sideBVec = [new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](sideB[0].x, sideB[0].y), new __WEBPACK_IMPORTED_MODULE_1__vector__["a" /* default */](sideB[1].x, sideB[1].y)];
                 isIntersect = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].getIntersection(sideAVec, sideBVec);

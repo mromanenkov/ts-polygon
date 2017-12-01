@@ -2,44 +2,43 @@ import Vector from './vector';
 
 export default class Polygon {
   public vertices: Vector[];
-  public strokeColor: string;
-  public fillColor: string;
   public isOverlap: boolean;
   public boundingBox: Vector[];
 
-  constructor(vertices: Vector[], strokeColor?: string, fillColor?: string) {
+  constructor(vertices: Vector[]) {
     this.vertices = vertices;
-    this.strokeColor = strokeColor || '#000';
-    this.fillColor = fillColor || '#fff';
     this.isOverlap = false;
     this.setBoundingBox();
   }
-  
+
   public shift(offset: Vector): void {
-    this.vertices.forEach((vertex) => {
-      vertex.x += offset.x;
-      vertex.y += offset.y;
-    });
+    for (let i = 0; i < this.vertices.length; i++) {
+      this.vertices[i] = this.vertices[i].add(offset);
+    }
     this.setBoundingBox();
   }
   
   public setBoundingBox(): void {
-    const minX: number = this.vertices.reduce((min, vertex) =>
-        (vertex.x < min ? vertex.x : min),    this.vertices[0].x);
-    const maxX: number = this.vertices.reduce((min, vertex) =>
-        (vertex.x > min ? vertex.x : min),    this.vertices[0].x);
-    const minY: number = this.vertices.reduce((min, vertex) =>
-        (vertex.y < min ? vertex.y : min),    this.vertices[0].y);
-    const maxY: number = this.vertices.reduce((min, vertex) =>
-        (vertex.y > min ? vertex.y : min),    this.vertices[0].y);
-        
+    let minX = this.vertices[0].x;
+    let maxX = this.vertices[0].x;
+    let minY = this.vertices[0].y;
+    let maxY = this.vertices[0].y;
+
+    this.vertices.forEach((vertex) => {
+      if (vertex.x < minX) {
+        minX = vertex.x;
+      }
+      if (vertex.x > maxX) {
+        maxX = vertex.x;
+      }
+      if (vertex.y < minY) {
+        minY = vertex.y;
+      }
+      if (vertex.y > maxY) {
+        maxY = vertex.y;
+      }
+    });
     this.boundingBox = [new Vector(minX, minY), new Vector(maxX, minY),
       new Vector(maxX, maxY), new Vector(minX, maxY)];
-  }
-
-  public clone(): Polygon {
-    const vertCopy: Vector[] = this.vertices.slice();
-    const newPoly = new Polygon(vertCopy, this.strokeColor, this.fillColor);
-    return newPoly;
   }
 }
