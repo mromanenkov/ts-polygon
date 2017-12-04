@@ -242,8 +242,7 @@ var Canvas = /** @class */ (function () {
         var _this = this;
         var ctx = this.element.getContext('2d');
         ctx.clearRect(0, 0, this.setting.width, this.setting.height);
-        this.updateIntersectingObjects();
-        this.checkVertexInPolyAll();
+        this.updateOverlappedObject(this.objects);
         this.objects.forEach(function (object) {
             _this.draw(object);
         });
@@ -265,22 +264,6 @@ var Canvas = /** @class */ (function () {
         });
         return isInPoly;
     };
-    Canvas.prototype.checkVertexInPolyAll = function () {
-        for (var i = 0; i < this.objects.length; i++) {
-            var objectA = this.objects[i];
-            for (var j = 0; j < this.objects.length; j++) {
-                if (i === j) {
-                    continue;
-                }
-                var objectB = this.objects[j];
-                var isInPoly = this.checkVertexInPoly(objectA, objectB);
-                if (isInPoly) {
-                    objectA.isOverlap = true;
-                    objectB.isOverlap = true;
-                }
-            }
-        }
-    };
     Canvas.prototype.checkSideIntersection = function (polyA, polyB) {
         var verticesA = polyA.vertices.concat([polyA.vertices[0]]);
         var verticesB = polyB.vertices.concat([polyB.vertices[0]]);
@@ -299,22 +282,22 @@ var Canvas = /** @class */ (function () {
         }
         return isIntersect;
     };
-    Canvas.prototype.findOverlappedObject = function (polyA, polyB) {
-        return this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB);
-    };
-    Canvas.prototype.updateIntersectingObjects = function () {
+    Canvas.prototype.updateOverlappedObject = function (polygons) {
         var overlapingObjects = new Set();
-        for (var i = 0; i < this.objects.length; i++) {
-            var objectA = this.objects[i];
-            for (var j = i + 1; j < this.objects.length; j++) {
-                var objectB = this.objects[j];
-                if (this.checkSideIntersection(objectA, objectB)) {
-                    overlapingObjects.add(objectA).add(objectB);
+        for (var i = 0; i < polygons.length; i++) {
+            var polyA = polygons[i];
+            for (var j = 0; j < polygons.length; j++) {
+                var polyB = polygons[j];
+                if (i !== j && this.checkVertexInPoly(polyA, polyB)) {
+                    overlapingObjects.add(polyA).add(polyB);
+                }
+                if (i > j && this.checkSideIntersection(polyA, polyB)) {
+                    overlapingObjects.add(polyA).add(polyB);
                 }
             }
         }
-        this.objects.forEach(function (object) {
-            object.isOverlap = overlapingObjects.has(object);
+        polygons.forEach(function (poly) {
+            poly.isOverlap = overlapingObjects.has(poly);
         });
     };
     return Canvas;

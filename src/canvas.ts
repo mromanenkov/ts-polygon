@@ -77,8 +77,7 @@ export class Canvas {
     const ctx = this.element.getContext('2d')!;
     ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
-    this.updateIntersectingObjects();
-    this.checkVertexInPolyAll();
+    this.updateOverlappedObject(this.objects);
 
     this.objects.forEach((object) => {
       this.draw(object);
@@ -107,23 +106,6 @@ export class Canvas {
     return isInPoly;
   }
 
-  private checkVertexInPolyAll(): void {
-    for (let i = 0; i < this.objects.length; i++) {
-      const objectA: Polygon = this.objects[i];
-      for (let j = 0; j < this.objects.length; j++) {
-        if (i === j) {
-          continue;
-        }
-        const objectB: Polygon = this.objects[j];
-        const isInPoly: boolean = this.checkVertexInPoly(objectA, objectB);
-        if (isInPoly) {
-          objectA.isOverlap = true;
-          objectB.isOverlap = true;
-        }
-      }
-    }
-  }
-
   private checkSideIntersection(polyA: Polygon, polyB: Polygon): boolean {
 
     const verticesA = [...polyA.vertices, polyA.vertices[0]];
@@ -148,26 +130,27 @@ export class Canvas {
     return isIntersect;
   }
 
-  private findOverlappedObject(polyA: Polygon, polyB: Polygon): boolean {
-    return this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB);
-  }
-
-  private updateIntersectingObjects(): void {
+  private updateOverlappedObject(polygons: Polygon[]): void {
     const overlapingObjects = new Set();
-    for (let i = 0; i < this.objects.length; i++) {
-      const objectA: Polygon = this.objects[i];
+    for (let i = 0; i < polygons.length; i++) {
+      const polyA: Polygon = polygons[i];
 
-      for (let j = i + 1; j < this.objects.length; j++) {
-        const objectB: Polygon = this.objects[j];
+      for (let j = 0; j < polygons.length; j++) {
+        const polyB: Polygon = polygons[j];
 
-        if (this.checkSideIntersection(objectA, objectB)) {
-          overlapingObjects.add(objectA).add(objectB);
+        if (i !== j && this.checkVertexInPoly(polyA, polyB)) {
+          overlapingObjects.add(polyA).add(polyB);
+        }
+
+        if (i > j && this.checkSideIntersection(polyA, polyB)) { 
+          overlapingObjects.add(polyA).add(polyB);
         }
       }
     }
 
-    this.objects.forEach((object) => {
-      object.isOverlap = overlapingObjects.has(object);
+    polygons.forEach((poly) => {
+      poly.isOverlap = overlapingObjects.has(poly);
     });
   }
+  
 }
