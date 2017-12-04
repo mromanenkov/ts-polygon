@@ -152,5 +152,4 @@ export class Canvas {
       poly.isOverlap = overlapingObjects.has(poly);
     });
   }
-  
 }

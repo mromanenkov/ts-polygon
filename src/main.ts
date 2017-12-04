@@ -38,11 +38,16 @@ window.addEventListener('load', () => {
     cursor.cursorUpPos.x = e.offsetX;
     cursor.cursorUpPos.y = e.offsetY;
     const offset = cursor.getOffset();
-  
+
     if (canvas.selectedObject) {
       canvas.selectedObject.shift(offset);
-      canvas.update();
     }
     canvas.selectedObject = null;
   });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    canvas.update();
+  }
+  animate();
 });
