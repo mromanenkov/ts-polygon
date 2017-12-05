@@ -1,8 +1,6 @@
-import Utils from './utils';
+import * as utils from './utils';
 import Polygon from './polygon';
 import Vector from './vector';
-
-const utils = new Utils();
 
 export interface ISetting {
   width: number;
@@ -75,7 +73,7 @@ export class Canvas {
     const ctx = this.element.getContext('2d')!;
     ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
-    utils.updateOverlappedObject(this.objects);
+    this.updateOverlappedObject(this.objects);
 
     this.objects.forEach((object) => {
       this.draw(object);
@@ -83,11 +81,27 @@ export class Canvas {
   }
 
   public getSelectedObject(cursorPos: Vector): Polygon | null {
-    let selectedObject: Polygon | null | undefined = null;
-
-    selectedObject = this.objects.find((object) => {
+    return this.objects.find((object) => {
       return utils.isPointInPoly(cursorPos, object.vertices);
+    }) || null ;
+  }
+
+  updateOverlappedObject(polygons: Polygon[]): void {
+    const overlapingObjects = new Set();
+    for (let i = 0; i < polygons.length; i++) {
+      const polyA: Polygon = polygons[i];
+
+      for (let j = i + 1; j < polygons.length; j++) {
+        const polyB: Polygon = polygons[j];
+
+        if (polyA.isOverlappingBy(polyB)) {
+          overlapingObjects.add(polyA).add(polyB);
+        } 
+      }
+    }
+
+    polygons.forEach((poly) => {
+      poly.isOverlap = overlapingObjects.has(poly);
     });
-    return selectedObject ? selectedObject : null;
   }
 }

@@ -1,4 +1,5 @@
 import Vector from './vector';
+import * as utils from './utils';
 
 export default class Polygon {
   public vertices: Vector[];
@@ -40,5 +41,9 @@ export default class Polygon {
     });
     this.boundingBox = [new Vector(minX, minY), new Vector(maxX, minY),
       new Vector(maxX, maxY), new Vector(minX, maxY)];
+  }
+
+  public isOverlappingBy(polygon: Polygon): boolean {
+    return utils.checkVertexInPoly(this, polygon) || utils.checkSideIntersection(this, polygon);
   }
 }

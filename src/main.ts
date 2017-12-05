@@ -3,6 +3,8 @@ import { Canvas, ISetting }  from  './canvas';
 import Cursor from './cursor';
 import Vector from './vector';
 
+//import * as tinycolor from 'tinycolor2';
+
 const polygonPointsA: Vector[] = [new Vector(100, 100), new Vector(200, 100),
   new Vector(200, 200), new Vector(100, 200)];
 const polygonPointsB: Vector[] = [new Vector(300, 400), new Vector(450, 300), new Vector(470, 370)];

@@ -1,4 +1,4 @@
-import utils from './utils';
+import * as utils from './utils';
 import Vector from './vector';
 
 export default class Cursor {
