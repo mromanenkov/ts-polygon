@@ -1,3 +1,14 @@
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import Hello from './hello';
+
+ReactDOM.render(
+  <Hello name="World" />,
+  document.getElementById('root'),
+);
+
+
+/*
 import Polygon from './polygon';
 import { Canvas, ISetting }  from  './canvas';
 import Cursor from './cursor';
@@ -51,3 +62,4 @@ window.addEventListener('load', () => {
   }
   animate();
 });
+*/

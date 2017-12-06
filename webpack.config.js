@@ -1,5 +1,12 @@
+const webpack = require('webpack');
+
 module.exports = {
-    entry: './src/main.ts',
+    entry: { 
+      main: [
+      //'webpack-dev-server/client?http://localhost:8081',
+      './src/main.tsx'
+    ]},
+    //entry: './src/main.tsx',
     output: {
       filename: './public/bundle.js',
     },
@@ -8,7 +15,7 @@ module.exports = {
     
     module: {
       loaders: [{
-        test: /\.ts$/,
+        test: /\.ts|\.tsx$/,
         use: 'ts-loader',
         exclude: /node_modules/
       }]
@@ -16,4 +23,11 @@ module.exports = {
     resolve: {
         extensions: [ '.tsx', '.ts', '.js' ]
     },
+    plugins: [
+      new webpack.HotModuleReplacementPlugin()
+    ],
+    devServer: {
+      hot: true,
+      contentBase: './',
+    }
   };

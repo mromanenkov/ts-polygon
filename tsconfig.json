@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
     "strict": true,
+    "jsx": "react",
     "outDir": "./public/",
     "noImplicitAny": true,
     "module": "es6",
     "target": "es5",
     "lib": ["es5", "es6", "dom"]
   },
-  "include":  ["src/**/*", "types/**/*"]
+  "include":  ["src/**/*", "types/**/*"],
+  "exclude": ["node_modules"]
 }
