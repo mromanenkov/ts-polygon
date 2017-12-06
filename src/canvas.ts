@@ -2,6 +2,9 @@ import * as utils from './utils';
 import Polygon from './polygon';
 import Vector from './vector';
 
+import * as tinycolor from 'tinycolor2';
+// console.log(tinycolor('red'));
+
 export interface ISetting {
   width: number;
   height: number;
