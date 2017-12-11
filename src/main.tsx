@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import Hello from './hello';
+import Hello from './control';
 
 ReactDOM.render(
-  <Hello name="World" />,
+  <Hello baseColor = "#fff" collisionColor = "#f00" />,
   document.getElementById('root'),
 );
 
