@@ -1,12 +1,19 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import Hello from './control';
+import App from './containers/app'; 
+import { Provider } from 'react-redux';
 
-ReactDOM.render(
-  <Hello baseColor = "#fff" collisionColor = "#f00" />,
-  document.getElementById('root'),
-);
+import { store } from './store';
 
+const render = () => {
+  ReactDOM.render(
+    <Provider store = {store}>
+      <App />
+    </Provider>, document.getElementById('root'),
+  );
+};
+store.subscribe(render);
+render();
 
 /*
 import Polygon from './polygon';

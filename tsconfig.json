@@ -6,7 +6,8 @@
     "noImplicitAny": true,
     "module": "es6",
     "target": "es5",
-    "lib": ["es5", "es6", "es7", "dom"]
+    "lib": ["es5", "es6", "es7", "dom"],
+    "moduleResolution": "node"
   },
   "include":  ["src/**/*", "types/**/*"],
   "exclude": ["node_modules"]
