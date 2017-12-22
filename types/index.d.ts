@@ -1,0 +1,1 @@
+/// <reference path="tinycolor2/index.d.ts" />
